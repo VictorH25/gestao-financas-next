@@ -1,149 +1,163 @@
 // src/app/page.js
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import MonthSelector from '@/components/MonthSelector'
+import DashboardCards from '@/components/DashboardCards'
+import IncomeAndFixedExpenses from '@/components/IncomeAndFixedExpenses'
+import DynamicExpenses from '@/components/DynamicExpenses'
+import MoMFeedback from '@/components/MoMFeedback'
+import { mesAtualStr } from '@/lib/utils'
 
 export default function Home() {
-  const [month, setMonth] = useState('2026-05')
+  const [month, setMonth] = useState(mesAtualStr())
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [previousData, setPreviousData] = useState(null)
+
+  // Buscar dados do mês atual
+  const fetchData = useCallback(async (monthToFetch) => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/financas?month=${monthToFetch}`)
+      const json = await res.json()
+      setData(json)
+      
+      // Buscar dados do mês anterior para comparação
+      const [ano, mes] = monthToFetch.split('-')
+      let mesAnterior = parseInt(mes) - 1
+      let anoAnterior = parseInt(ano)
+      if (mesAnterior === 0) {
+        mesAnterior = 12
+        anoAnterior--
+      }
+      const previousMonthStr = `${anoAnterior}-${String(mesAnterior).padStart(2, '0')}`
+      
+      const prevRes = await fetch(`/api/financas?month=${previousMonthStr}`)
+      const prevJson = await prevRes.json()
+      setPreviousData(prevJson)
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    fetchData()
+    fetchData(month)
+  }, [month, fetchData])
+
+  // Atualizar campo específico
+  const handleFieldChange = useCallback(async (field, value) => {
+    if (!data) return
+    
+    const updated = { ...data, [field]: value }
+    setData(updated)
+    
+    try {
+      const res = await fetch('/api/financas', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month, [field]: value })
+      })
+      const json = await res.json()
+      setData(json)
+    } catch (error) {
+      console.error('Erro ao atualizar:', error)
+    }
+  }, [month, data])
+
+  // Adicionar gasto dinâmico
+  const handleAddExpense = useCallback(async (nome, valor) => {
+    try {
+      const res = await fetch('/api/financas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month, nome, valor })
+      })
+      const json = await res.json()
+      setData(json)
+    } catch (error) {
+      console.error('Erro ao adicionar gasto:', error)
+    }
   }, [month])
 
-  async function fetchData() {
-    setLoading(true)
-    const res = await fetch(`/api/financas?month=${month}`)
-    const json = await res.json()
-    setData(json)
-    setLoading(false)
-  }
+  // Deletar gasto dinâmico
+  const handleDeleteExpense = useCallback(async (id) => {
+    try {
+      const res = await fetch(`/api/financas?id=${id}&month=${month}`, {
+        method: 'DELETE'
+      })
+      const json = await res.json()
+      setData(json)
+    } catch (error) {
+      console.error('Erro ao deletar gasto:', error)
+    }
+  }, [month])
 
-  async function updateField(field, value) {
-    const res = await fetch('/api/financas', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ month, [field]: parseFloat(value) || 0 })
-    })
-    const json = await res.json()
-    setData(json)
-  }
+  // Calcular totais
+  const totalReceitas = (data?.meuSalario || 0) + (data?.salarioEsposa || 0)
+  const fixedExpenses = (data?.agua || 0) + (data?.luz || 0) + (data?.parcelaCasa || 0) + 
+                        (data?.internet || 0) + (data?.seguroMoto || 0) + (data?.feira || 0)
+  const dynamicExpenses = data?.demaisGastos?.reduce((sum, g) => sum + g.valor, 0) || 0
+  const totalDespesas = fixedExpenses + dynamicExpenses
+  const saldo = totalReceitas - totalDespesas
+  const percentual = totalReceitas > 0 ? (totalDespesas / totalReceitas) * 100 : 0
 
-  async function addExpense(nome, valor) {
-    const res = await fetch('/api/financas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ month, nome, valor: parseFloat(valor) })
-    })
-    const json = await res.json()
-    setData(json)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900 flex items-center justify-center">
+        <div className="text-white text-xl">Carregando...</div>
+      </div>
+    )
   }
-
-  async function deleteExpense(id) {
-    const res = await fetch(`/api/financas?id=${id}&month=${month}`, {
-      method: 'DELETE'
-    })
-    const json = await res.json()
-    setData(json)
-  }
-
-  if (loading) return <div className="p-8">Carregando...</div>
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestão de Finanças</h1>
-
-      <div className="mb-4">
-        <label className="font-semibold">Mês: </label>
-        <input
-          type="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="border rounded px-2 py-1 ml-2"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="border rounded p-4">
-          <h2 className="font-bold mb-2">Receitas</h2>
+    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
           <div>
-            <label>Meu Salário: </label>
-            <input
-              type="number"
-              defaultValue={data?.meuSalario || 0}
-              onBlur={(e) => updateField('meuSalario', e.target.value)}
-              className="border rounded px-2 py-1 ml-2 w-32"
-            />
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">
+              FinFamília
+            </h1>
+            <p className="text-white/40 text-sm mt-1">Gestão de Finanças Pessoais e Familiares</p>
           </div>
-          <div className="mt-2">
-            <label>Salário Esposa: </label>
-            <input
-              type="number"
-              defaultValue={data?.salarioEsposa || 0}
-              onBlur={(e) => updateField('salarioEsposa', e.target.value)}
-              className="border rounded px-2 py-1 ml-2 w-32"
-            />
-          </div>
+          <MonthSelector activeMonth={month} onChange={setMonth} />
         </div>
 
-        <div className="border rounded p-4">
-          <h2 className="font-bold mb-2">Despesas Fixas</h2>
-          {['agua', 'luz', 'parcelaCasa', 'internet', 'seguroMoto', 'feira'].map(field => (
-            <div key={field}>
-              <label className="capitalize">{field}: </label>
-              <input
-                type="number"
-                defaultValue={data?.[field] || 0}
-                onBlur={(e) => updateField(field, e.target.value)}
-                className="border rounded px-2 py-1 ml-2 w-32"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* Dashboard Cards */}
+        <DashboardCards 
+          totalReceitas={totalReceitas}
+          totalDespesas={totalDespesas}
+          saldo={saldo}
+          percentual={percentual}
+        />
 
-      <div className="border rounded p-4">
-        <h2 className="font-bold mb-2">Demais Gastos</h2>
-        <div className="mb-4">
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            const nome = e.target.nome.value
-            const valor = e.target.valor.value
-            if (nome && valor) addExpense(nome, valor)
-            e.target.reset()
-          }} className="flex gap-2">
-            <input name="nome" placeholder="Nome do gasto" className="border rounded px-2 py-1 flex-1" />
-            <input name="valor" type="number" placeholder="Valor" className="border rounded px-2 py-1 w-32" />
-            <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">Adicionar</button>
-          </form>
+        {/* Income and Fixed Expenses */}
+        <div className="mt-6">
+          <IncomeAndFixedExpenses 
+            data={data || {}} 
+            onFieldChange={handleFieldChange}
+          />
         </div>
 
-        <div className="space-y-2">
-          {data?.demaisGastos?.map(gasto => (
-            <div key={gasto.id} className="flex justify-between items-center border-b py-1">
-              <span>{gasto.nome}</span>
-              <span>R$ {gasto.valor.toFixed(2)}</span>
-              <button
-                onClick={() => deleteExpense(gasto.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded text-sm"
-              >
-                Remover
-              </button>
-            </div>
-          ))}
+        {/* Dynamic Expenses */}
+        <div className="mt-6">
+          <DynamicExpenses 
+            items={data?.demaisGastos || []}
+            onAdd={handleAddExpense}
+            onDelete={handleDeleteExpense}
+          />
         </div>
-      </div>
 
-      <div className="mt-6 p-4 bg-gray-100 rounded">
-        <h3 className="font-bold">Resumo</h3>
-        <p>Total Receitas: R$ {(data?.meuSalario || 0) + (data?.salarioEsposa || 0)}</p>
-        <p>Total Despesas: R$ {Object.values(data || {}).reduce((acc, val) => {
-          const fixedTotal = (data?.agua || 0) + (data?.luz || 0) + (data?.parcelaCasa || 0) +
-            (data?.internet || 0) + (data?.seguroMoto || 0) + (data?.feira || 0)
-          const dynamicTotal = data?.demaisGastos?.reduce((s, g) => s + g.valor, 0) || 0
-          return fixedTotal + dynamicTotal
-        }, 0)}</p>
+        {/* Month-over-Month Feedback */}
+        <div className="mt-6">
+          <MoMFeedback 
+            current={data}
+            previous={previousData}
+          />
+        </div>
       </div>
     </div>
   )
