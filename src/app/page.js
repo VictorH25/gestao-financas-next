@@ -171,6 +171,7 @@ export default function Home() {
   }
 
   // Renderizar Análise Comparativa Mensal
+  // Renderizar Análise Comparativa Mensal
   const renderComparativo = () => {
     const mesAnteriorStr = obterMesAnterior(mesAtivo)
     const dadosAnterior = historico[mesAnteriorStr]
@@ -189,9 +190,17 @@ export default function Home() {
     const deltaRec = recAtual - recAnterior
 
     if (deltaRec > 0) {
-      insights.push({ tipo: 'positivo', titulo: 'Ganho de Receita Familiar', descricao: `Renda total da casa subiu <strong>${formatarBRL(deltaRec)}</strong> comparado ao mês anterior.` })
+      insights.push({
+        tipo: 'positivo',
+        titulo: 'Ganho de Receita Familiar',
+        descricao: `Renda total da casa subiu ${formatarBRL(deltaRec)} comparado ao mês anterior.`
+      })
     } else if (deltaRec < 0) {
-      insights.push({ tipo: 'negativo', titulo: 'Redução de Renda Familiar', descricao: `A renda total recuou em <strong>${formatarBRL(Math.abs(deltaRec))}</strong> comparado ao mês passado.` })
+      insights.push({
+        tipo: 'negativo',
+        titulo: 'Redução de Renda Familiar',
+        descricao: `A renda total recuou em ${formatarBRL(Math.abs(deltaRec))} comparado ao mês passado.`
+      })
     }
 
     const despFixasAnt = Object.values(dadosAnterior.despesasFixas).reduce((a, b) => a + (b || 0), 0)
@@ -200,13 +209,25 @@ export default function Home() {
     const deltaDesp = totalDespesas - totalDespAnt
 
     if (deltaDesp < 0) {
-      insights.push({ tipo: 'positivo', titulo: 'Redução Geral nas Despesas', descricao: `Excelente! A família economizou <strong>${formatarBRL(Math.abs(deltaDesp))}</strong> no total de gastos.` })
+      insights.push({
+        tipo: 'positivo',
+        titulo: 'Redução Geral nas Despesas',
+        descricao: `Excelente! A família economizou ${formatarBRL(Math.abs(deltaDesp))} no total de gastos.`
+      })
     } else if (deltaDesp > 0) {
-      insights.push({ tipo: 'negativo', titulo: 'Alta Geral nas Despesas', descricao: `Alerta: As despesas gerais aumentaram <strong>${formatarBRL(deltaDesp)}</strong> comparado ao mês passado.` })
+      insights.push({
+        tipo: 'negativo',
+        titulo: 'Alta Geral nas Despesas',
+        descricao: `Alerta: As despesas gerais aumentaram ${formatarBRL(deltaDesp)} comparado ao mês passado.`
+      })
     }
 
     if (insights.length === 0) {
-      return <div className="comparativo-item comparativo-neutro">⚖️ Seus gastos estão estáveis (variação menor que 5%) em relação ao mês anterior.</div>
+      return (
+        <div className="comparativo-item comparativo-neutro">
+          ⚖️ Seus gastos estão estáveis (variação menor que 5%) em relação ao mês anterior.
+        </div>
+      )
     }
 
     return (
@@ -214,7 +235,17 @@ export default function Home() {
         {insights.map((ins, idx) => (
           <li key={idx} className={`comparativo-item comparativo-${ins.tipo}`}>
             <div className="comparativo-item-icon">
-              {ins.tipo === 'positivo' ? '✓' : '⚠️'}
+              {ins.tipo === 'positivo' ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+              )}
             </div>
             <div className="comparativo-content">
               <strong>{ins.titulo}:</strong> {ins.descricao}
