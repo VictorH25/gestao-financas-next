@@ -5,12 +5,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model MonthRecord {
   id            String           @id @default(uuid())
-  month         String           @unique // Formato: "2026-05"
+  month         String           @unique
   meuSalario    Float            @default(0)
   salarioEsposa Float            @default(0)
   agua          Float            @default(0)
