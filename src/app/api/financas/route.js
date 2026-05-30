@@ -1,4 +1,4 @@
-import prisma from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 
 // Garante ou cria o registro do mês no banco
