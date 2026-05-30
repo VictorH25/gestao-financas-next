@@ -1,0 +1,34 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model MonthRecord {
+  id            String           @id @default(uuid())
+  month         String           @unique // Formato: "2026-05"
+  meuSalario    Float            @default(0)
+  salarioEsposa Float            @default(0)
+  agua          Float            @default(0)
+  luz           Float            @default(0)
+  parcelaCasa   Float            @default(0)
+  internet      Float            @default(0)
+  seguroMoto    Float            @default(0)
+  feira         Float            @default(0)
+  demaisGastos  DynamicExpense[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model DynamicExpense {
+  id            String      @id @default(uuid())
+  nome          String
+  valor         Float
+  monthRecordId String
+  monthRecord   MonthRecord @relation(fields: [monthRecordId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+}

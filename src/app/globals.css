@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  --bg-dark: hsl(222, 47%, 9%);
+  --card-bg: hsla(223, 47%, 14%, 0.55);
+  --card-border: hsla(223, 100%, 100%, 0.08);
+  --emerald: hsl(142, 72%, 43%);
+  --rose: hsl(346, 84%, 58%);
+  --amber: hsl(38, 92%, 50%);
+  --primary: hsl(250, 89%, 65%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-jakarta), 'Plus Jakarta Sans', system-ui, sans-serif;
+  background-color: var(--bg-dark);
+  background-image:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(220, 30%, 12%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(250, 40%, 15%, 0.15) 0, transparent 40%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: hsl(222, 47%, 6%); }
+::-webkit-scrollbar-thumb { background: hsla(223, 20%, 30%, 0.5); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsla(223, 20%, 40%, 0.8); }
+
+/* Glassmorphism card base */
+.glass-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px -10px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.05);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideOut {
+  to { opacity: 0; transform: scale(0.92); height: 0; padding: 0; margin: 0; overflow: hidden; }
+}
+
+.animate-fade-in    { animation: fadeInUp 0.55s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-scale-in   { animation: scaleIn  0.3s  cubic-bezier(0.34,1.56,0.64,1) both; }
+.animate-slide-out  { animation: slideOut 0.25s cubic-bezier(0.4,0,1,1) forwards; }
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(to right, #fff, hsl(210, 100%, 95%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Progress bar transition */
+.progress-fill {
+  transition: width 0.6s cubic-bezier(0.1, 0.8, 0.25, 1);
+}
+
+/* Number input: hide arrows */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
