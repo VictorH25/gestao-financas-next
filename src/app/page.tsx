@@ -155,13 +155,14 @@ export default function Home() {
         <div className="header-content">
           <div className="logo-area">
             <div className="logo-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
+              <img 
+                src="/icone.png" 
+                alt="FinFamília Logo" 
+                className="w-10 h-10 md:w-6 md:h-6 object-contain"
+              />
             </div>
             <div>
-              <h1>FinFamília</h1>
+              <h1>FinFamily</h1>
               <p className="subtitle">Planejamento e Harmonia Financeira Familiar</p>
             </div>
           </div>
@@ -174,9 +175,9 @@ export default function Home() {
       <main className="app-main relative" key={mesAtivo}>
         {/* Indicador de carregamento sutil */}
         {loading && (
-          <div className="absolute top-4 right-4 flex items-center gap-2 bg-violet-600/80 backdrop-blur border border-violet-500/20 px-3.5 py-1.5 rounded-full z-10 text-xs font-bold text-white shadow-lg animate-pulse">
+          <div className="fixed top-4 right-4 flex items-center gap-2 bg-violet-600/90 backdrop-blur-md border border-violet-500/30 px-3.5 py-1.5 rounded-full z-50 text-xs font-bold text-white shadow-xl animate-pulse">
             <span className="inline-block w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            Sincronizando...
+            <span>Sincronizando...</span>
           </div>
         )}
 

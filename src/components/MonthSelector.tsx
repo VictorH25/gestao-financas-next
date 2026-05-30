@@ -51,7 +51,9 @@ export default function MonthSelector({ activeMonth, onChange }: MonthSelectorPr
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400" />
           </span>
-          <span className=''>Hoje</span>
+          <span style={{ paddingRight: '5px' }}>
+  Hoje
+</span>
         </button>
       )}
     </div>

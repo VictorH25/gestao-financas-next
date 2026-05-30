@@ -12,7 +12,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'FinFamília - Gestão de Finanças Pessoais e Familiares',
+  title: 'FinFamily - Gestão de Finanças Pessoais e Familiares',
   description: 'Controle completo das finanças pessoais e familiares',
   manifest: '/manifest.json',
 }
