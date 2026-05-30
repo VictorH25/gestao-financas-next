@@ -1,3 +1,6 @@
+@import "tailwindcss";
+@source "../**/*.{ts,tsx}";
+
 /* ==========================================================================
    FinFamília - Sistema de Cores e Estilos Premium (VERSÃO MOBILE OTIMIZADA)
    ========================================================================== */
@@ -1811,4 +1814,79 @@ input:focus {
 
 .comparativo-content {
     flex: 1;
+}
+
+/* ==========================================================================
+   Fallback Utilities for Tailwind Spacing and Grids
+   ========================================================================== */
+.space-y-2 > * + * {
+    margin-top: 8px !important;
+}
+.space-y-4 > * + * {
+    margin-top: 16px !important;
+}
+.space-y-6 > * + * {
+    margin-top: 24px !important;
+}
+.space-x-4 > * + * {
+    margin-left: 16px !important;
+}
+.grid {
+    display: grid !important;
+}
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+    .sm\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .sm\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    .sm\:flex-row {
+        flex-direction: row !important;
+    }
+}
+.gap-3 {
+    gap: 12px !important;
+}
+.gap-4 {
+    gap: 16px !important;
+}
+.gap-6 {
+    gap: 24px !important;
+}
+.p-5 {
+    padding: 20px !important;
+}
+.px-6 {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+}
+.py-4 {
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+}
+.py-5 {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+}
+.flex-col {
+    flex-direction: column !important;
+}
+.flex-row {
+    flex-direction: row !important;
+}
+.items-center {
+    align-items: center !important;
+}
+.justify-between {
+    justify-content: space-between !important;
+}
+.mt-4 {
+    margin-top: 16px !important;
+}
+.mt-6 {
+    margin-top: 24px !important;
 }

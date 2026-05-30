@@ -1,8 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { MonthRecord } from '@/types'
 
 // Garante ou cria o registro do mês no banco
-async function getOrCreateMonth(month) {
+async function getOrCreateMonth(month: string) {
   let record = await prisma.monthRecord.findUnique({
     where: { month },
     include: { demaisGastos: { orderBy: { createdAt: 'asc' } } },
@@ -17,11 +18,13 @@ async function getOrCreateMonth(month) {
 }
 
 // GET /api/financas?month=2026-05
-export async function GET(request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const month = searchParams.get('month')
-    if (!month) return NextResponse.json({ error: 'month é obrigatório' }, { status: 400 })
+    if (!month) {
+      return NextResponse.json({ error: 'month é obrigatório' }, { status: 400 })
+    }
 
     const record = await getOrCreateMonth(month)
     return NextResponse.json(record)
@@ -32,17 +35,29 @@ export async function GET(request) {
 }
 
 // PATCH /api/financas  → atualiza campos de receitas e despesas fixas do mês
-export async function PATCH(request) {
+export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json()
     const { month, ...fields } = body
-    if (!month) return NextResponse.json({ error: 'month é obrigatório' }, { status: 400 })
+    if (!month) {
+      return NextResponse.json({ error: 'month é obrigatório' }, { status: 400 })
+    }
 
     // Garante que o registro existe antes de atualizar
     await getOrCreateMonth(month)
 
-    const allowed = ['meuSalario', 'salarioEsposa', 'agua', 'luz', 'parcelaCasa', 'internet', 'seguroMoto', 'feira']
-    const data = {}
+    const allowed = [
+      'meuSalario',
+      'salarioEsposa',
+      'agua',
+      'luz',
+      'parcelaCasa',
+      'internet',
+      'seguroMoto',
+      'feira'
+    ]
+    const data: Record<string, number> = {}
+    
     for (const key of allowed) {
       if (fields[key] !== undefined) {
         data[key] = parseFloat(fields[key]) || 0
@@ -62,7 +77,7 @@ export async function PATCH(request) {
 }
 
 // POST /api/financas  → adiciona um novo item de "Demais Gastos"
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { month, nome, valor } = body
@@ -72,13 +87,27 @@ export async function POST(request) {
 
     const record = await getOrCreateMonth(month)
 
-    const newExpense = await prisma.dynamicExpense.create({
-      data: {
-        nome: nome.trim(),
-        valor: parseFloat(valor) || 0,
+    const existing = await prisma.dynamicExpense.findFirst({
+      where: {
         monthRecordId: record.id,
+        nome: nome.trim(),
       },
     })
+
+    if (existing) {
+      await prisma.dynamicExpense.update({
+        where: { id: existing.id },
+        data: { valor: parseFloat(valor) || 0 },
+      })
+    } else {
+      await prisma.dynamicExpense.create({
+        data: {
+          nome: nome.trim(),
+          valor: parseFloat(valor) || 0,
+          monthRecordId: record.id,
+        },
+      })
+    }
 
     // Retorna o registro completo e atualizado
     const updated = await prisma.monthRecord.findUnique({
@@ -92,13 +121,15 @@ export async function POST(request) {
   }
 }
 
-// DELETE /api/financas?id=xxx  → exclui um item de "Demais Gastos"
-export async function DELETE(request) {
+// DELETE /api/financas?id=xxx&month=2026-05  → exclui um item de "Demais Gastos"
+export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const month = searchParams.get('month')
-    if (!id || !month) return NextResponse.json({ error: 'id e month são obrigatórios' }, { status: 400 })
+    if (!id || !month) {
+      return NextResponse.json({ error: 'id e month são obrigatórios' }, { status: 400 })
+    }
 
     await prisma.dynamicExpense.delete({ where: { id } })
 
