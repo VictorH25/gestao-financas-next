@@ -1,164 +1,233 @@
 // src/app/page.js
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import MonthSelector from '@/components/MonthSelector'
-import DashboardCards from '@/components/DashboardCards'
-import IncomeAndFixedExpenses from '@/components/IncomeAndFixedExpenses'
-import DynamicExpenses from '@/components/DynamicExpenses'
-import MoMFeedback from '@/components/MoMFeedback'
-import { mesAtualStr } from '@/lib/utils'
+import { useFinance } from '@/context/FinanceContext'
+import { useState, useMemo } from 'react'
 
 export default function Home() {
-  const [month, setMonth] = useState(mesAtualStr())
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [previousData, setPreviousData] = useState(null)
+  const {
+    mesAtivo,
+    obterDadosMesAtivo,
+    atualizarReceita,
+    atualizarDespesaFixa,
+    adicionarGasto,
+    removerGasto,
+    mudarMes,
+    formatarBRL,
+    obterNomeMes,
+    obterMesAnterior,
+    obterMesSeguinte
+  } = useFinance()
 
-  // Buscar dados do mês atual
-  const fetchData = useCallback(async (monthToFetch) => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/financas?month=${monthToFetch}`)
-      const json = await res.json()
-      setData(json)
-      
-      // Buscar dados do mês anterior para comparação
-      const [ano, mes] = monthToFetch.split('-')
-      let mesAnterior = parseInt(mes) - 1
-      let anoAnterior = parseInt(ano)
-      if (mesAnterior === 0) {
-        mesAnterior = 12
-        anoAnterior--
-      }
-      const previousMonthStr = `${anoAnterior}-${String(mesAnterior).padStart(2, '0')}`
-      
-      const prevRes = await fetch(`/api/financas?month=${previousMonthStr}`)
-      const prevJson = await prevRes.json()
-      setPreviousData(prevJson)
-    } catch (error) {
-      console.error('Erro ao buscar dados:', error)
-    } finally {
-      setLoading(false)
+  const dados = obterDadosMesAtivo()
+  const [novoGastoNome, setNovoGastoNome] = useState('')
+  const [novoGastoValor, setNovoGastoValor] = useState('')
+
+  // Cálculos para o dashboard
+  const totalReceitas = (dados.receitas.meuSalario || 0) + (dados.receitas.salarioEsposa || 0)
+  const totalDespesasFixas = Object.values(dados.despesasFixas).reduce((a, b) => a + (b || 0), 0)
+  const totalDemaisGastos = dados.demaisGastos.reduce((a, b) => a + (b.valor || 0), 0)
+  const totalDespesas = totalDespesasFixas + totalDemaisGastos
+  const saldoRestante = totalReceitas - totalDespesas
+  const percentualGasto = totalReceitas > 0 ? (totalDespesas / totalReceitas) * 100 : 0
+
+  const handleSubmitGasto = (e) => {
+    e.preventDefault()
+    if (novoGastoNome.trim() && novoGastoValor > 0) {
+      adicionarGasto(novoGastoNome.trim(), parseFloat(novoGastoValor))
+      setNovoGastoNome('')
+      setNovoGastoValor('')
     }
-  }, [])
-
-  useEffect(() => {
-    fetchData(month)
-  }, [month, fetchData])
-
-  // Atualizar campo específico
-  const handleFieldChange = useCallback(async (field, value) => {
-    if (!data) return
-    
-    const updated = { ...data, [field]: value }
-    setData(updated)
-    
-    try {
-      const res = await fetch('/api/financas', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, [field]: value })
-      })
-      const json = await res.json()
-      setData(json)
-    } catch (error) {
-      console.error('Erro ao atualizar:', error)
-    }
-  }, [month, data])
-
-  // Adicionar gasto dinâmico
-  const handleAddExpense = useCallback(async (nome, valor) => {
-    try {
-      const res = await fetch('/api/financas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, nome, valor })
-      })
-      const json = await res.json()
-      setData(json)
-    } catch (error) {
-      console.error('Erro ao adicionar gasto:', error)
-    }
-  }, [month])
-
-  // Deletar gasto dinâmico
-  const handleDeleteExpense = useCallback(async (id) => {
-    try {
-      const res = await fetch(`/api/financas?id=${id}&month=${month}`, {
-        method: 'DELETE'
-      })
-      const json = await res.json()
-      setData(json)
-    } catch (error) {
-      console.error('Erro ao deletar gasto:', error)
-    }
-  }, [month])
-
-  // Calcular totais
-  const totalReceitas = (data?.meuSalario || 0) + (data?.salarioEsposa || 0)
-  const fixedExpenses = (data?.agua || 0) + (data?.luz || 0) + (data?.parcelaCasa || 0) + 
-                        (data?.internet || 0) + (data?.seguroMoto || 0) + (data?.feira || 0)
-  const dynamicExpenses = data?.demaisGastos?.reduce((sum, g) => sum + g.valor, 0) || 0
-  const totalDespesas = fixedExpenses + dynamicExpenses
-  const saldo = totalReceitas - totalDespesas
-  const percentual = totalReceitas > 0 ? (totalDespesas / totalReceitas) * 100 : 0
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900 flex items-center justify-center">
-        <div className="text-white text-xl">Carregando...</div>
-      </div>
-    )
   }
 
+  const statusSaldo = saldoRestante < 0 ? 'perigo' : percentualGasto > 80 ? 'alerta' : 'ok'
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-black to-zinc-900">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">
-              FinFamília
-            </h1>
-            <p className="text-white/40 text-sm mt-1">Gestão de Finanças Pessoais e Familiares</p>
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <div className="logo-area">
+            <div className="logo-icon">💰</div>
+            <div>
+              <h1>FinFamília</h1>
+              <p className="subtitle">Planejamento e Harmonia Financeira Familiar</p>
+            </div>
           </div>
-          <MonthSelector activeMonth={month} onChange={setMonth} />
+          <div className="header-badge">
+            <button onClick={() => mudarMes(obterMesAnterior(mesAtivo))} className="btn-nav-mes">
+              ◀
+            </button>
+            <span id="current-month-year">{obterNomeMes(mesAtivo)}</span>
+            <button onClick={() => mudarMes(obterMesSeguinte(mesAtivo))} className="btn-nav-mes">
+              ▶
+            </button>
+          </div>
         </div>
+      </header>
 
-        {/* Dashboard Cards */}
-        <DashboardCards 
-          totalReceitas={totalReceitas}
-          totalDespesas={totalDespesas}
-          saldo={saldo}
-          percentual={percentual}
-        />
+      {/* Main Content */}
+      <main className="app-main">
+        {/* Coluna da Esquerda */}
+        <section className="entries-column">
+          {/* Receitas */}
+          <div className="card glass-card">
+            <div className="card-header">
+              <div className="card-icon income-icon">💰</div>
+              <h2>Receitas Familiares (Entradas)</h2>
+            </div>
+            <div className="card-body">
+              <div className="input-group-row">
+                <div className="input-field">
+                  <label>Meu Salário (R$)</label>
+                  <input
+                    type="number"
+                    value={dados.receitas.meuSalario || ''}
+                    onChange={(e) => atualizarReceita('meuSalario', parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="input-field">
+                  <label>Salário da Esposa (R$)</label>
+                  <input
+                    type="number"
+                    value={dados.receitas.salarioEsposa || ''}
+                    onChange={(e) => atualizarReceita('salarioEsposa', parseFloat(e.target.value) || 0)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              <div className="section-summary-row">
+                <span>Soma das Receitas:</span>
+                <strong>{formatarBRL(totalReceitas)}</strong>
+              </div>
+            </div>
+          </div>
 
-        {/* Income and Fixed Expenses */}
-        <div className="mt-6">
-          <IncomeAndFixedExpenses 
-            data={data || {}} 
-            onFieldChange={handleFieldChange}
-          />
-        </div>
+          {/* Despesas Fixas - continue com todos os campos */}
+          <div className="card glass-card">
+            <div className="card-header">
+              <div className="card-icon expense-icon">📋</div>
+              <h2>Despesas Fixas (Contas do Mês)</h2>
+            </div>
+            <div className="card-body">
+              <div className="grid-fields">
+                {[
+                  { id: 'agua', label: 'Água' },
+                  { id: 'luz', label: 'Luz' },
+                  { id: 'parcelaCasa', label: 'Parcela Casa / Aluguel' },
+                  { id: 'internet', label: 'Internet' },
+                  { id: 'seguroMoto', label: 'Seguro da Moto' },
+                  { id: 'feira', label: 'Feira / Supermercado' }
+                ].map(({ id, label }) => (
+                  <div className="input-field" key={id}>
+                    <label>{label}</label>
+                    <input
+                      type="number"
+                      value={dados.despesasFixas[id] || ''}
+                      onChange={(e) => atualizarDespesaFixa(id, parseFloat(e.target.value) || 0)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
-        {/* Dynamic Expenses */}
-        <div className="mt-6">
-          <DynamicExpenses 
-            items={data?.demaisGastos || []}
-            onAdd={handleAddExpense}
-            onDelete={handleDeleteExpense}
-          />
-        </div>
+        {/* Coluna da Direita */}
+        <section className="dashboard-column">
+          {/* Cards */}
+          <div className="dashboard-grid">
+            <div className={`metric-card glass-card ${statusSaldo === 'ok' ? 'text-emerald' : statusSaldo === 'alerta' ? 'text-amber' : 'text-rose'}`}>
+              <div className="metric-header">
+                <span>Total Receitas</span>
+              </div>
+              <div className="metric-value">{formatarBRL(totalReceitas)}</div>
+            </div>
+            <div className="metric-card glass-card text-rose">
+              <div className="metric-header">
+                <span>Total Despesas</span>
+              </div>
+              <div className="metric-value">{formatarBRL(totalDespesas)}</div>
+            </div>
+            <div className="metric-card glass-card">
+              <div className="metric-header">
+                <span>Saldo Restante</span>
+              </div>
+              <div className="metric-value" style={{ color: saldoRestante >= 0 ? '#34d399' : '#f87171' }}>
+                {formatarBRL(saldoRestante)}
+              </div>
+            </div>
+          </div>
 
-        {/* Month-over-Month Feedback */}
-        <div className="mt-6">
-          <MoMFeedback 
-            current={data}
-            previous={previousData}
-          />
-        </div>
-      </div>
+          {/* Barra de Progresso */}
+          <div className="card glass-card">
+            <div className="budget-progress-container">
+              <div className="budget-progress-info">
+                <span>Orçamento Familiar Comprometido</span>
+                <strong>{percentualGasto.toFixed(1)}%</strong>
+              </div>
+              <div className="progress-bar-bg">
+                <div className="progress-bar-fill" style={{ width: `${Math.min(percentualGasto, 100)}%` }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Demais Gastos */}
+          <div className="card glass-card">
+            <div className="card-header">
+              <div className="card-icon dynamic-icon">➕</div>
+              <h2>Demais Gastos (Dinâmicos / Eventuais)</h2>
+            </div>
+            <div className="card-body">
+              <form onSubmit={handleSubmitGasto} className="inline-form">
+                <input
+                  type="text"
+                  placeholder="Nome do gasto"
+                  value={novoGastoNome}
+                  onChange={(e) => setNovoGastoNome(e.target.value)}
+                  required
+                />
+                <input
+                  type="number"
+                  placeholder="Valor"
+                  value={novoGastoValor}
+                  onChange={(e) => setNovoGastoValor(e.target.value)}
+                  step="0.01"
+                  min="0.01"
+                  required
+                />
+                <button type="submit" className="btn btn-primary">Adicionar</button>
+              </form>
+
+              <ul className="dynamic-list">
+                {dados.demaisGastos.length === 0 ? (
+                  <li className="empty-list-message">Nenhum gasto dinâmico cadastrado.</li>
+                ) : (
+                  dados.demaisGastos.map(gasto => (
+                    <li key={gasto.id} className="dynamic-list-item">
+                      <div className="item-info">
+                        <span className="item-name">{gasto.nome}</span>
+                        <span className="item-tag">Dinâmico</span>
+                      </div>
+                      <div className="item-action-area">
+                        <span className="item-value">{formatarBRL(gasto.valor)}</span>
+                        <button onClick={() => removerGasto(gasto.id)} className="btn-delete">
+                          🗑️
+                        </button>
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }
