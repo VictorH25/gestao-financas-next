@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b0764" />
+      <stop offset="50%" stop-color="#1e1b4b" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    
+    <!-- Accent Logo Gradient -->
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <!-- Green Success Glow -->
+    <linearGradient id="greenGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+  </defs>
+
+  <!-- Maskable Canvas Background -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)" />
+  
+  <!-- Subtle circular grid light -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="8" />
+  <circle cx="256" cy="256" r="150" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="4" />
+  
+  <!-- Dollar Symbol Glow Layer -->
+  <path d="M256,110 L256,402 M295,160 C295,160 217,135 217,195 C217,255 295,257 295,317 C295,377 217,352 217,352" 
+        fill="none" stroke="url(#logoGrad)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" filter="blur(10px)" />
+        
+  <!-- Dollar Symbol Main Layer -->
+  <path d="M256,110 L256,402 M295,160 C295,160 217,135 217,195 C217,255 295,257 295,317 C295,377 217,352 217,352" 
+        fill="none" stroke="url(#logoGrad)" stroke-width="36" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Shield/House Overlay representing Family Security -->
+  <path d="M256,160 L380,245 L380,360 C380,390 256,430 256,430 C256,430 132,390 132,360 L132,245 Z" 
+        fill="none" stroke="url(#greenGrad)" stroke-width="16" stroke-linejoin="round" opacity="0.85" />
+        
+  <!-- Small glowing checkmark in the middle representing organized finances -->
+  <polyline points="225,290 248,313 295,260" fill="none" stroke="#10B981" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

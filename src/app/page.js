@@ -25,6 +25,46 @@ export default function Home() {
   const [novoGastoValor, setNovoGastoValor] = useState('')
   const [removingId, setRemovingId] = useState(null)
 
+  // Registro do Service Worker do PWA
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('PWA Service Worker registrado com sucesso:', reg.scope))
+        .catch((err) => console.error('Erro ao registrar PWA Service Worker:', err));
+    }
+  }, [])
+
+  // Validador de teclas para garantir apenas números positivos e decimais
+  const handleKeyPressNumeric = (e) => {
+    const allowedKeys = [
+      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'
+    ];
+    if (allowedKeys.includes(e.key)) {
+      return;
+    }
+    
+    // Bloqueia teclas científicas comuns em input type="number"
+    if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') {
+      e.preventDefault();
+      return;
+    }
+
+    if (/^[0-9]$/.test(e.key)) {
+      return;
+    }
+
+    // Permite ponto e vírgula apenas uma vez
+    if (e.key === '.' || e.key === ',') {
+      const val = e.target.value;
+      if (!val.includes('.') && !val.includes(',')) {
+        return;
+      }
+    }
+
+    e.preventDefault();
+  }
+
   // Cálculos para o dashboard
   const totalReceitas = (dados.receitas.meuSalario || 0) + (dados.receitas.salarioEsposa || 0)
   const totalDespesasFixas = Object.values(dados.despesasFixas).reduce((a, b) => a + (b || 0), 0)
@@ -189,17 +229,24 @@ export default function Home() {
     const recAnterior = (dadosAnterior.receitas.meuSalario || 0) + (dadosAnterior.receitas.salarioEsposa || 0)
     const deltaRec = recAtual - recAnterior
 
+    const formatarPct = (valor, base) => {
+      if (!base || base === 0) return '';
+      const pct = (Math.abs(valor) / base) * 100;
+      const pctStr = (pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1)).replace('.', ',');
+      return ` (${pctStr}%)`;
+    }
+
     if (deltaRec > 0) {
       insights.push({
         tipo: 'positivo',
         titulo: 'Ganho de Receita Familiar',
-        descricao: `Renda total da casa subiu ${formatarBRL(deltaRec)} comparado ao mês anterior.`
+        descricao: `Renda total da casa subiu ${formatarBRL(deltaRec)}${formatarPct(deltaRec, recAnterior)} comparado ao mês anterior.`
       })
     } else if (deltaRec < 0) {
       insights.push({
         tipo: 'negativo',
         titulo: 'Redução de Renda Familiar',
-        descricao: `A renda total recuou em ${formatarBRL(Math.abs(deltaRec))} comparado ao mês passado.`
+        descricao: `A renda total recuou em ${formatarBRL(Math.abs(deltaRec))}${formatarPct(deltaRec, recAnterior)} comparado ao mês passado.`
       })
     }
 
@@ -212,13 +259,13 @@ export default function Home() {
       insights.push({
         tipo: 'positivo',
         titulo: 'Redução Geral nas Despesas',
-        descricao: `Excelente! A família economizou ${formatarBRL(Math.abs(deltaDesp))} no total de gastos.`
+        descricao: `Excelente! A família economizou ${formatarBRL(Math.abs(deltaDesp))}${formatarPct(deltaDesp, totalDespAnt)} no total de gastos.`
       })
     } else if (deltaDesp > 0) {
       insights.push({
         tipo: 'negativo',
         titulo: 'Alta Geral nas Despesas',
-        descricao: `Alerta: As despesas gerais aumentaram ${formatarBRL(deltaDesp)} comparado ao mês passado.`
+        descricao: `Alerta: As despesas gerais aumentaram ${formatarBRL(deltaDesp)}${formatarPct(deltaDesp, totalDespAnt)} comparado ao mês passado.`
       })
     }
 
@@ -290,7 +337,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="app-main">
+      <main className="app-main" key={mesAtivo}>
         {/* Coluna da Esquerda */}
         <section className="entries-column">
           {/* Receitas */}
@@ -308,13 +355,15 @@ export default function Home() {
             <div className="card-body">
               <div className="input-group-row">
                 <div className="input-field">
-                  <label>Meu Salário (R$)</label>
+                  <label>Salário do Marido (R$)</label>
                   <div className="input-wrapper">
                     <span className="currency-prefix">R$</span>
                     <input
                       type="number"
+                      inputMode="decimal"
+                      onKeyDown={handleKeyPressNumeric}
                       value={dados.receitas.meuSalario || ''}
-                      onChange={(e) => atualizarReceita('meuSalario', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => atualizarReceita('meuSalario', parseFloat(e.target.value.replace(',', '.')) || 0)}
                       min="0"
                       step="0.01"
                       placeholder="0,00"
@@ -327,8 +376,10 @@ export default function Home() {
                     <span className="currency-prefix">R$</span>
                     <input
                       type="number"
+                      inputMode="decimal"
+                      onKeyDown={handleKeyPressNumeric}
                       value={dados.receitas.salarioEsposa || ''}
-                      onChange={(e) => atualizarReceita('salarioEsposa', parseFloat(e.target.value) || 0)}
+                      onChange={(e) => atualizarReceita('salarioEsposa', parseFloat(e.target.value.replace(',', '.')) || 0)}
                       min="0"
                       step="0.01"
                       placeholder="0,00"
@@ -376,8 +427,10 @@ export default function Home() {
                       <span className="currency-prefix">R$</span>
                       <input
                         type="number"
+                        inputMode="decimal"
+                        onKeyDown={handleKeyPressNumeric}
                         value={dados.despesasFixas[id] || ''}
-                        onChange={(e) => atualizarDespesaFixa(id, parseFloat(e.target.value) || 0)}
+                        onChange={(e) => atualizarDespesaFixa(id, parseFloat(e.target.value.replace(',', '.')) || 0)}
                         min="0"
                         step="0.01"
                         placeholder="0,00"
@@ -477,8 +530,10 @@ export default function Home() {
                     <span className="currency-prefix">R$</span>
                     <input
                       type="number"
+                      inputMode="decimal"
+                      onKeyDown={handleKeyPressNumeric}
                       value={novoGastoValor}
-                      onChange={(e) => setNovoGastoValor(e.target.value)}
+                      onChange={(e) => setNovoGastoValor(e.target.value.replace(',', '.'))}
                       min="0.01"
                       step="0.01"
                       placeholder="0,00"
