@@ -2,7 +2,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useFinance } from '@/context/FinanceContext'
+import { useAuth } from '@/context/AuthContext'
 import MonthSelector from '@/components/MonthSelector'
 import DashboardCards from '@/components/DashboardCards'
 import IncomeAndFixedExpenses from '@/components/IncomeAndFixedExpenses'
@@ -10,6 +12,8 @@ import DynamicExpenses from '@/components/DynamicExpenses'
 import MoMFeedback from '@/components/MoMFeedback'
 
 export default function Home() {
+  const router = useRouter()
+  const { user, logout, isAuthenticated, loading: authLoading } = useAuth()
   const {
     mesAtivo,
     historico,
@@ -28,6 +32,12 @@ export default function Home() {
   } = useFinance()
 
   const dados = obterDadosMesAtivo()
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace('/login')
+    }
+  }, [authLoading, isAuthenticated, router])
 
   // Registro do Service Worker do PWA
   useEffect(() => {
@@ -96,7 +106,7 @@ export default function Home() {
           <div className="alert-card-content">
             <h4>Alerta Vermelho: Orçamento Extremamente Comprometido!</h4>
             <p>Você está consumindo <strong>{percentualGasto.toFixed(1)}%</strong> da sua renda total com despesas corporativas e familiares.</p>
-            <p className="mt-4"><strong>Recomendação imediata:</strong> Evite qualquer nova dívida. Foque em revisar e eliminar despesas na seção de <strong>"Demais Gastos"</strong>.</p>
+            <p className="mt-4"><strong>Recomendação imediata:</strong> Evite qualquer nova dívida. Foque em revisar e eliminar despesas na seção de <strong>&quot;Demais Gastos&quot;</strong>.</p>
           </div>
         </div>
       )
@@ -148,6 +158,10 @@ export default function Home() {
   const previousMonthStr = obterMesAnterior(mesAtivo)
   const previousMonthData = historico[previousMonthStr]
 
+  if (!authLoading && !isAuthenticated) {
+    return null
+  }
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -168,6 +182,16 @@ export default function Home() {
           </div>
           
           <MonthSelector activeMonth={mesAtivo} onChange={mudarMes} />
+
+          <div className="user-menu">
+            <div>
+              <span>Logado como</span>
+              <strong>{user?.name}</strong>
+            </div>
+            <button type="button" className="btn btn-ghost" onClick={logout}>
+              Sair
+            </button>
+          </div>
         </div>
       </header>
 
@@ -248,7 +272,7 @@ export default function Home() {
                   <div className="tip-icon">💳</div>
                   <div className="tip-content">
                     <h4>Evite Parcelamentos</h4>
-                    <p>Evite parcelamentos longos em compras que não sejam necessidades básicas urgentes. O acúmulo de parcelas pequenas "sufoca" a sua renda futura.</p>
+                    <p>Evite parcelamentos longos em compras que não sejam necessidades básicas urgentes. O acúmulo de parcelas pequenas &quot;sufoca&quot; a sua renda futura.</p>
                   </div>
                 </div>
               </div>

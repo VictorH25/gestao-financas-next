@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import React from 'react'
+import { AuthProvider } from '@/context/AuthContext'
 import { FinanceProvider } from '@/context/FinanceContext'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import { Metadata } from 'next'
@@ -33,9 +34,11 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="pt-BR" suppressHydrationWarning className={plusJakartaSans.variable}>
       <body suppressHydrationWarning className={plusJakartaSans.className}>
-        <FinanceProvider>
-          {children}
-        </FinanceProvider>
+        <AuthProvider>
+          <FinanceProvider>
+            {children}
+          </FinanceProvider>
+        </AuthProvider>
       </body>
     </html>
   )

@@ -7,9 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String
+  name         String
+  monthRecords MonthRecord[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("usuarios")
+}
+
 model MonthRecord {
   id            String           @id @default(uuid())
-  month         String           @unique
+  month         String
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   meuSalario    Float            @default(0)
   salarioEsposa Float            @default(0)
   agua          Float            @default(0)
@@ -21,6 +35,9 @@ model MonthRecord {
   demaisGastos  DynamicExpense[]
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+
+  @@unique([userId, month])
+  @@map("registros_mensais")
 }
 
 model DynamicExpense {
@@ -30,4 +47,6 @@ model DynamicExpense {
   monthRecordId String
   monthRecord   MonthRecord @relation(fields: [monthRecordId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
+
+  @@map("despesas_dinamicas")
 }
