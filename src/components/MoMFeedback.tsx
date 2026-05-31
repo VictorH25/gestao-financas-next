@@ -47,7 +47,11 @@ function ToneBadge({ tone, pct }: { tone: 'good' | 'bad' | 'neutral'; pct: numbe
       ? 'text-rose-400 bg-rose-400/10 border-rose-500/20'
       : 'text-white/50 bg-white/5 border-white/10'
 
-  return <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cls}`}>{arrow} {Math.abs(pct).toFixed(1)}%</span>
+  return (
+    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cls}`}>
+      {arrow} {Math.abs(pct).toFixed(1)}%
+    </span>
+  )
 }
 
 export default function MoMFeedback({ current, previous, fixedCategories }: MoMFeedbackProps) {
@@ -116,12 +120,12 @@ export default function MoMFeedback({ current, previous, fixedCategories }: MoMF
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-bold text-white">Análise vs. Mês Anterior</h2>
+          <h2 className="text-base font-bold text-white">Analise vs. Mes Anterior</h2>
           <p className="text-xs text-white/35">{monthLabel}</p>
         </div>
       </div>
 
-      <div className="card-body space-y-3">
+      <div className="card-body mom-body">
         {rows.map((row) => {
           const delta = calcDelta(row.currentValue, row.previousValue)
           const pct = calcPct(row.currentValue, row.previousValue)
@@ -129,21 +133,25 @@ export default function MoMFeedback({ current, previous, fixedCategories }: MoMF
           const deltaPrefix = delta > 0 ? '+' : ''
 
           return (
-            <div key={row.id} className="rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-white/90">
+            <div key={row.id} className="mom-row">
+              <div className="mom-row-head">
+                <div className="mom-row-title">
                   {row.icon ? `${row.icon} ` : ''}
                   {row.label}
                 </div>
                 <ToneBadge tone={tone} pct={pct} />
               </div>
 
-              <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs">
-                <div className="text-white/45">Anterior: <span className="text-white/75 font-semibold">{formatBRL(row.previousValue)}</span></div>
-                <div className="text-white/45">Atual: <span className="text-white/95 font-semibold">{formatBRL(row.currentValue)}</span></div>
-                <div className="text-white/45">
-                  Diferença:{' '}
-                  <span className={`font-semibold ${tone === 'good' ? 'text-emerald-400' : tone === 'bad' ? 'text-rose-400' : 'text-white/70'}`}>
+              <div className="mom-metrics">
+                <div className="mom-metric">
+                  Anterior: <span className="mom-metric-value">{formatBRL(row.previousValue)}</span>
+                </div>
+                <div className="mom-metric">
+                  Atual: <span className="mom-metric-value current">{formatBRL(row.currentValue)}</span>
+                </div>
+                <div className="mom-metric">
+                  Diferenca:{' '}
+                  <span className={`mom-delta ${tone === 'good' ? 'good' : tone === 'bad' ? 'bad' : 'neutral'}`}>
                     {deltaPrefix}
                     {formatBRL(delta)}
                   </span>

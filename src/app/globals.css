@@ -2457,6 +2457,118 @@ input:focus {
 }
 
 /* ==========================================================================
+   Analise vs Mes Anterior (MoM)
+   ========================================================================== */
+.mom-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mom-row {
+    border-radius: 14px;
+    border: 1px solid hsla(223, 100%, 100%, 0.1);
+    background:
+        linear-gradient(145deg, hsla(250, 30%, 16%, 0.28), hsla(223, 47%, 9%, 0.5)),
+        hsla(223, 47%, 9%, 0.55);
+    box-shadow:
+        inset 0 1px 0 hsla(0, 0%, 100%, 0.05),
+        0 10px 24px -14px hsla(250, 89%, 65%, 0.35);
+    padding: 10px 11px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mom-row:hover {
+    transform: translateY(-1px);
+    border-color: hsla(250, 89%, 65%, 0.35);
+    box-shadow:
+        inset 0 1px 0 hsla(0, 0%, 100%, 0.07),
+        0 14px 28px -16px hsla(250, 89%, 65%, 0.45);
+}
+
+.mom-row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mom-row-title {
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: hsla(0, 0%, 100%, 0.95);
+    letter-spacing: 0.01em;
+}
+
+.mom-metrics {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+}
+
+.mom-metric {
+    font-size: 0.74rem;
+    color: hsla(0, 0%, 100%, 0.55);
+    line-height: 1.35;
+    background: hsla(223, 47%, 7%, 0.45);
+    border: 1px solid hsla(0, 0%, 100%, 0.06);
+    border-radius: 9px;
+    padding: 6px 8px;
+}
+
+.mom-metric-value {
+    color: hsla(0, 0%, 100%, 0.78);
+    font-weight: 700;
+}
+
+.mom-metric-value.current {
+    color: hsla(0, 0%, 100%, 0.98);
+}
+
+.mom-delta {
+    font-weight: 700;
+}
+
+.mom-delta.good {
+    color: hsl(148, 78%, 55%);
+    text-shadow: 0 0 10px hsla(148, 78%, 55%, 0.2);
+}
+
+.mom-delta.bad {
+    color: hsl(350, 95%, 68%);
+    text-shadow: 0 0 10px hsla(350, 95%, 68%, 0.2);
+}
+
+.mom-delta.neutral {
+    color: hsla(0, 0%, 100%, 0.72);
+}
+
+@media (min-width: 768px) {
+    .mom-body {
+        gap: 12px;
+    }
+
+    .mom-row {
+        padding: 12px 14px;
+        border-radius: 15px;
+    }
+
+    .mom-row-title {
+        font-size: 0.9rem;
+    }
+
+    .mom-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px 12px;
+    }
+
+    .mom-metric {
+        font-size: 0.78rem;
+    }
+}
+
+/* ==========================================================================
    Fallback Utilities for Tailwind Spacing and Grids
    ========================================================================== */
 .space-y-2>*+* {
