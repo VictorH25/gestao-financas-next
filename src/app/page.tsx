@@ -10,6 +10,7 @@ import DashboardCards from '@/components/DashboardCards'
 import IncomeAndFixedExpenses from '@/components/IncomeAndFixedExpenses'
 import DynamicExpenses from '@/components/DynamicExpenses'
 import MoMFeedback from '@/components/MoMFeedback'
+import UserProfileMenu from '@/components/UserProfileMenu'
 
 export default function Home() {
   const router = useRouter()
@@ -183,14 +184,8 @@ export default function Home() {
           
           <MonthSelector activeMonth={mesAtivo} onChange={mudarMes} />
 
-          <div className="user-menu">
-            <div>
-              <span>Logado como</span>
-              <strong>{user?.name}</strong>
-            </div>
-            <button type="button" className="btn btn-ghost" onClick={logout}>
-              Sair
-            </button>
+          <div className="header-profile-slot">
+            <UserProfileMenu userId={user?.id} userName={user?.name} userEmail={user?.email} onLogout={logout} />
           </div>
         </div>
       </header>

@@ -12,9 +12,9 @@ export default function MonthSelector({ activeMonth, onChange }: MonthSelectorPr
   const isAtual = activeMonth === mesAtualStr()
 
   return (
-    <div className="flex items-center gap-2 animate-fade-in">
+    <div className="month-selector-root flex items-center gap-2 animate-fade-in">
       {/* Cápsula do Seletor Symmetrical */}
-      <div className="flex items-center gap-2 glass-card px-3 py-1 rounded-full border border-white/5">
+      <div className="month-selector-main flex items-center gap-2 glass-card px-3 py-1 rounded-full border border-white/5">
         <button
           onClick={() => onChange(mesAnterior(activeMonth))}
           className="w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/5 transition-all active:scale-90 cursor-pointer"
@@ -44,7 +44,7 @@ export default function MonthSelector({ activeMonth, onChange }: MonthSelectorPr
       {!isAtual && (
         <button
           onClick={() => onChange(mesAtualStr())}
-          className="flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full bg-violet-600/20 text-violet-400 border border-violet-500/20 hover:bg-violet-600 hover:text-white hover:border-violet-400 hover:shadow-[0_0_12px_hsla(250,89%,65%,0.3)] transition-all active:scale-95 cursor-pointer"
+          className="month-selector-today flex items-center justify-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full bg-violet-600/20 text-violet-400 border border-violet-500/20 hover:bg-violet-600 hover:text-white hover:border-violet-400 hover:shadow-[0_0_12px_hsla(250,89%,65%,0.3)] transition-all active:scale-95 cursor-pointer"
           title="Voltar para o mês atual"
         >
           <span className="relative flex h-1.5 w-2 ">
